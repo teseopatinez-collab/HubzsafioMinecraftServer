@@ -118,5 +118,16 @@ except ModuleNotFoundError:
     print("[mcserver] carpeta mcserver/ no encontrada, usando copia embebida")
     zipfile.ZipFile(io.BytesIO(base64.b64decode(EMBED))).extractall(HERE)
     sys.modules.pop("mcserver", None)
-from mcserver.headless import run
-run()
+import traceback
+print("[debug] cwd:", os.getcwd(), flush=True)
+print("[debug] archivos:", sorted(os.listdir(HERE)), flush=True)
+try:
+    from mcserver.headless import run
+    run()
+except SystemExit as e:
+    print("[debug] SystemExit con codigo:", e.code, flush=True)
+    raise
+except BaseException:
+    traceback.print_exc(file=sys.stdout)
+    sys.stdout.flush()
+    raise
