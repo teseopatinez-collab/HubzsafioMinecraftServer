@@ -48,6 +48,7 @@ APP_NAME = "MEXUS Server Manager"
 APP_VERSION = "4.0.0"
 CONFIG_FILE = "mexus_config.json"
 LOCKED_TYPE = "fabric"
+FABRIC_LAUNCH_JAR = "fabric-server-launch.jar"
 LOCKED_VERSION = "1.21.4"
 SERVER_JAR = "server.jar"
 QUILT_LAUNCH_JAR = "quilt-server-launch.jar"
@@ -810,15 +811,18 @@ class ServerDownloader:
                         version,
                         "-loader",
                         loader_version,
+                        "-downloadMinecraft",
                     ],
                     cwd=root,
                     capture_output=True,
                     text=True,
                     timeout=180,
                 )
-                if completed.returncode == 0 and (root / SERVER_JAR).exists():
+                if completed.returncode == 0 and (
+                    (root / SERVER_JAR).exists() or (root / FABRIC_LAUNCH_JAR).exists()
+                ):
                     installer_path.unlink(missing_ok=True)
-                    return root / SERVER_JAR
+                    return root / FABRIC_LAUNCH_JAR if (root / FABRIC_LAUNCH_JAR).exists() else root / SERVER_JAR
                 if completed.returncode == 0:
                     UI.warning(
                         "El instalador de Fabric termino, pero no se encontro server.jar."
@@ -1207,6 +1211,8 @@ class ServerManager:
 
     @property
     def jar_name(self) -> str:
+        if self.server_type == "fabric" and (self.root / FABRIC_LAUNCH_JAR).exists():
+            return FABRIC_LAUNCH_JAR
         if self.server_type == "quilt":
             launcher = find_quilt_launcher(self.root)
             if launcher is not None:
